@@ -1,5 +1,5 @@
-# dwm version
-VERSION = 6.1
+# dwm version with timestamp
+VERSION = 6.1-`date +%d%m%y-%H%M%S`
 
 # Customize below to fit your system
 
