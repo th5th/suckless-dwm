@@ -40,6 +40,7 @@
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
 
+// For Xft font support, and easier config.
 #include <fontconfig/fontconfig.h>
 #include <X11/Xft/Xft.h>
 
@@ -189,6 +190,7 @@ static void focusin(XEvent *e);
 static void focusmon(const Arg *arg);
 static void focusstack(const Arg *arg);
 static XftColor getcolor(const char *colstr);
+static Bool getcustomstatustext(char *text);
 static Bool getrootptr(int *x, int *y);
 static long getstate(Window w);
 static Bool gettextprop(Window w, Atom atom, char *text, unsigned int size);
@@ -929,6 +931,11 @@ getcolor(const char *colstr) {
 		die("error, cannot allocate color '%s'\n", colstr);
 
 	return color;
+}
+
+Bool
+getcustomstatustext(char *text) {
+    return False;
 }
 
 Bool
@@ -2005,9 +2012,11 @@ updatetitle(Client *c) {
 
 void
 updatestatus(void) {
-	if(!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
-		strcpy(stext, "dwm-"VERSION);
-	drawbar(selmon);
+    if(!getcustomstatustext(stext))
+        if(!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
+            strcpy(stext, "dwm-"VERSION);
+
+    drawbar(selmon);
 }
 
 void
