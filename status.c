@@ -7,50 +7,48 @@
 #define STATUS_BUF_SIZE 64
 
 int fetch_int_from_file(const char *file_name);
-float get_battery_percent();
-void get_date_time(char *buf);
+Bool get_batt_info(char *buf);
+Bool get_date_time(char *buf);
 
-Bool
-get_custom_status_text(char *text) {
+Bool get_custom_status_text(char *text) {
     // Fetch time, battery percentage, wireless stuff?
-    // Peek at Conky source?
-    // Already have a battery info parser (in C++ but still)
-    char *buf;
-	if((buf = malloc(sizeof(char) * STATUS_BUF_SIZE)) == NULL) {
-		fprintf(stderr, "Cannot allocate memory for date and time buffer.\n");
-        return False;
-	}
+    char batt_buf[STATUS_BUF_SIZE];
+    char time_buf[STATUS_BUF_SIZE];
 
-    get_date_time(buf);
-
-    if(buf == NULL)
+    if(!get_date_time(time_buf) || !get_batt_info(batt_buf))
     {
-		fprintf(stderr, "Error fetching date and time.\n");
+		fprintf(stderr, "Error fetching status info.\n");
         return False;
     }
 
-    float batt_perc = get_battery_percent();
-    if(batt_perc < 0.0)
-        return False;
-
-    sprintf(text, "Battery at %.0f%%  |  %s", batt_perc, buf);
-    free(buf);
+    sprintf(text, "%s  |  %s", batt_buf, time_buf);
     return True;
 }
 
-float get_battery_percent() {
+Bool get_batt_info(char *buf) {
+    char batt_state[STATUS_BUF_SIZE];
 	float energy_now, energy_full;
 
 	energy_now = (float)fetch_int_from_file("/sys/class/power_supply/BAT0/energy_now");
     energy_full	= (float)fetch_int_from_file("/sys/class/power_supply/BAT0/energy_full");
 
     if(energy_now < 0.0 || energy_full < 0.0)
-        return -1.0;
-    else
-        return 100 * energy_now / energy_full;
+        return False;
+
+    FILE *fd = fopen("/sys/class/power_supply/BAT0/status", "r");
+	if(fd == NULL) {
+		fprintf(stderr, "Error opening status file.\n");
+        return False;
+    } else {
+        fscanf(fd, "%s", batt_state);
+        fclose(fd);
+	}
+
+    sprintf(buf, "Battery %s (%.0f%%)", batt_state, 100*energy_now/energy_full);
+    return True;
 }
 
-void get_date_time(char *buf)
+Bool get_date_time(char *buf)
 {
 	time_t result;
 	struct tm *resulttm;
@@ -59,14 +57,14 @@ void get_date_time(char *buf)
 	resulttm = localtime(&result);
 	if(resulttm == NULL) {
 		fprintf(stderr, "Error getting localtime.\n");
-        buf = NULL;
-        return;
+        return False;
 	}
 	if(!strftime(buf, sizeof(char)*STATUS_BUF_SIZE - 1, "%A %d %B %R", resulttm)) {
 		fprintf(stderr, "strftime is 0.\n");
-        buf = NULL;
-        return;
+        return False;
 	}
+
+    return True;
 }
 
 int fetch_int_from_file(const char *file_name)
