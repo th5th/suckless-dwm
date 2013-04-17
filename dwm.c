@@ -44,7 +44,7 @@
 #include <fontconfig/fontconfig.h>
 #include <X11/Xft/Xft.h>
 
-#include "draw.h"
+#include "drw.h"
 #include "util.h"
 
 /* macros */
