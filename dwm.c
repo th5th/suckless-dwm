@@ -46,7 +46,6 @@
 
 #include "draw.h"
 #include "util.h"
-#include "status.h"
 
 /* macros */
 #define BUTTONMASK              (ButtonPressMask|ButtonReleaseMask)
@@ -2007,9 +2006,8 @@ updatetitle(Client *c) {
 
 void
 updatestatus(void) {
-    if(!get_custom_status_text(stext))
-        if(!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
-            strcpy(stext, "dwm-"VERSION);
+    if(!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
+        strcpy(stext, "dwm-"VERSION);
 
     drawbar(selmon);
 }
